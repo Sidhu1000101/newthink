@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(STUDENT)
+  createdAt DateTime @default(now())
+
+  // Relations
+  createdAssignments Assignment[] @relation("AssignmentCreator")
+  submissions        Submission[]
+
+  @@map("users")
+}
+
+model Assignment {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  createdBy   String
+  createdAt   DateTime @default(now())
+
+  // Relations
+  creator     User         @relation("AssignmentCreator", fields: [createdBy], references: [id])
+  submissions Submission[]
+
+  @@map("assignments")
+}
+
+model Submission {
+  id               String           @id @default(uuid())
+  content          String?          // Text content
+  fileUrl          String?          // PDF file URL
+  plagiarismRisk   Float            @default(0) // Percentage (0-100)
+  feedbackSummary  String?          // AI-generated feedback
+  score            Int?             // Numeric score (0-100)
+  status           SubmissionStatus @default(PENDING)
+  createdAt        DateTime         @default(now())
+
+  // Relations
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  
+  studentId    String
+  student      User       @relation(fields: [studentId], references: [id])
+
+  @@map("submissions")
+}
+
+enum UserRole {
+  STUDENT
+  INSTRUCTOR
+}
+
+enum SubmissionStatus {
+  PENDING
+  EVALUATED
+}
