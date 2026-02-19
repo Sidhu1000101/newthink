@@ -31,6 +31,16 @@ export default function SubmitAssignmentPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const fetchAssignment = async () => {
+    try {
+      const response = await assignmentsAPI.getById(assignmentId)
+      setAssignment(response.assignment)
+    } catch (error) {
+      console.error('Error fetching assignment:', error)
+      router.push('/assignments')
+    }
+  }
+
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       router.push('/login')
@@ -42,16 +52,6 @@ export default function SubmitAssignmentPage() {
       fetchAssignment()
     }
   }, [isAuthenticated, user, assignmentId])
-
-  const fetchAssignment = async () => {
-    try {
-      const response = await assignmentsAPI.getById(assignmentId)
-      setAssignment(response.assignment)
-    } catch (error) {
-      console.error('Error fetching assignment:', error)
-      router.push('/assignments')
-    }
-  }
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
