@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useParams } from 'next/navigation'
 import Layout from '@/components/Layout'
@@ -31,13 +31,13 @@ export default function SubmitAssignmentPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  useState(() => {
+  useEffect(() => {
     if (!loading && !isAuthenticated) {
       router.push('/login')
     }
   }, [loading, isAuthenticated, router])
 
-  useState(() => {
+  useEffect(() => {
     if (isAuthenticated && user?.role === 'STUDENT' && assignmentId) {
       fetchAssignment()
     }
