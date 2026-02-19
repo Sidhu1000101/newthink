@@ -1,19 +1,21 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '../../context/AuthContext'
 import { useRouter } from 'next/navigation'
-import Layout from '@/components/Layout'
+import Layout from '../../components/Layout'
 import { 
   Search, 
   Filter,
   FileText,
   Calendar,
+  CheckCircle,
+  Clock,
   User,
   ArrowRight
 } from 'lucide-react'
-import { assignmentsAPI, submissionsAPI } from '@/services/api'
-import { Assignment, Submission } from '@/services/api'
+import { assignmentsAPI, submissionsAPI } from '../../services/api'
+import { Assignment, Submission } from '../../services/api'
 import Link from 'next/link'
 
 export default function AssignmentsPage() {

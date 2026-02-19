@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/context/AuthContext'
+import { useAuth } from '../../context/AuthContext'
 import { useRouter } from 'next/navigation'
-import Layout from '@/components/Layout'
+import Layout from '../../components/Layout'
 import { 
   BookOpen, 
   FileText, 
@@ -14,8 +14,8 @@ import {
   Award,
   Users
 } from 'lucide-react'
-import { submissionsAPI, assignmentsAPI } from '@/services/api'
-import { Assignment, Submission } from '@/services/api'
+import { submissionsAPI, assignmentsAPI } from '../../services/api'
+import { Assignment, Submission } from '../../services/api'
 
 interface DashboardStats {
   totalAssignments: number
