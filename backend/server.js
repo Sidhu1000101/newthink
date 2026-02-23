@@ -35,10 +35,12 @@ app.use('/api/', limiter);
 
 // CORS configuration
 app.use(cors({
-  origin: ['https://newthink.vercel.app', 'http://localhost:3000', process.env.FRONTEND_URL],
+  origin: ['https://newthink.vercel.app', 'https://newthinkplus.vercel.app', 'http://localhost:3000', process.env.FRONTEND_URL],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  preflightContinue: false,
+  optionsSuccessStatus: 200
 }));
 
 // Body parsing middleware
@@ -62,6 +64,19 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/submissions', submissionRoutes);
+
+// Handle preflight requests
+app.options('*', (req, res) => {
+  const allowedOrigins = ['https://newthink.vercel.app', 'https://newthinkplus.vercel.app', 'http://localhost:3000'];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin) || !origin) {
+    res.header('Access-Control-Allow-Origin', origin || '*');
+  }
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.status(200).send();
+});
 
 // API documentation endpoint
 app.get('/api', (req, res) => {
