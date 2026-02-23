@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useReducer, useEffect } from 'react'
-import { authAPI } from '../services/api'
+import { authAPI } from '@/services/api'
 import toast from 'react-hot-toast'
 
 // Types
@@ -96,6 +96,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Initialize auth state from localStorage
   useEffect(() => {
     const initAuth = () => {
+      // Check if we're in a browser environment
+      if (typeof window === 'undefined') {
+        setLoading(false)
+        return
+      }
+
       try {
         const token = localStorage.getItem('token')
         const userStr = localStorage.getItem('user')
@@ -109,8 +115,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (error) {
         console.error('Error initializing auth:', error)
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
+        // Clear potentially corrupted data
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+        }
       } finally {
         setLoading(false)
       }
@@ -123,12 +132,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     try {
       dispatch({ type: 'LOGIN_START' })
+      console.log('Attempting login with:', email)
       
       const response = await authAPI.login(email, password)
+      console.log('Login response:', response)
       
       // Store in localStorage
-      localStorage.setItem('token', response.token)
-      localStorage.setItem('user', JSON.stringify(response.user))
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('token', response.token)
+        localStorage.setItem('user', JSON.stringify(response.user))
+      }
       
       dispatch({
         type: 'LOGIN_SUCCESS',
@@ -137,8 +150,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       toast.success('Login successful!')
     } catch (error: any) {
+      console.error('Login error:', error)
       dispatch({ type: 'LOGIN_FAILURE' })
-      const message = error.response?.data?.message || 'Login failed'
+      const message = error.response?.data?.message || error.message || 'Login failed'
       toast.error(message)
       throw error
     }
@@ -157,8 +171,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await authAPI.register(name, email, password, role)
       
       // Store in localStorage
-      localStorage.setItem('token', response.token)
-      localStorage.setItem('user', JSON.stringify(response.user))
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('token', response.token)
+        localStorage.setItem('user', JSON.stringify(response.user))
+      }
       
       dispatch({
         type: 'LOGIN_SUCCESS',
@@ -168,7 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.success('Registration successful!')
     } catch (error: any) {
       dispatch({ type: 'LOGIN_FAILURE' })
-      const message = error.response?.data?.message || 'Registration failed'
+      const message = error.response?.data?.message || error.message || 'Registration failed'
       toast.error(message)
       throw error
     }
@@ -176,8 +192,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Logout function
   const logout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+    }
     dispatch({ type: 'LOGOUT' })
     toast.success('Logged out successfully')
   }

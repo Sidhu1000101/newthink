@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '../../context/AuthContext'
+import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
-import Layout from '../../components/Layout'
+import Layout from '@/components/Layout'
 import { 
   BookOpen, 
   FileText, 
@@ -14,8 +14,8 @@ import {
   Award,
   Users
 } from 'lucide-react'
-import { submissionsAPI, assignmentsAPI } from '../../services/api'
-import { Assignment, Submission } from '../../services/api'
+import { submissionsAPI, assignmentsAPI } from '@/services/api'
+import { Assignment, Submission } from '@/services/api'
 
 interface DashboardStats {
   totalAssignments: number
@@ -54,13 +54,24 @@ export default function DashboardPage() {
   const fetchDashboardData = async () => {
     try {
       setIsLoading(true)
+      console.log('Fetching dashboard data for user:', user?.role, user?.id)
+      
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Dashboard data fetch timeout')), 10000)
+      )
       
       if (user?.role === 'STUDENT') {
         // Fetch student data
-        const [submissionsRes, assignmentsRes] = await Promise.all([
-          submissionsAPI.getMySubmissions({ limit: 5 }),
-          assignmentsAPI.getAll({ limit: 5 })
-        ])
+        console.log('Fetching student data...')
+        const [submissionsRes, assignmentsRes] = await Promise.race([
+          Promise.all([
+            submissionsAPI.getMySubmissions({ limit: 5 }),
+            assignmentsAPI.getAll({ limit: 5 })
+          ]),
+          timeoutPromise
+        ]) as [any, any]
+        console.log('Student data received:', { submissionsRes, assignmentsRes })
 
         const completedSubmissions = submissionsRes.submissions.filter(s => s.status === 'EVALUATED')
         const pendingSubmissions = submissionsRes.submissions.filter(s => s.status === 'PENDING')
@@ -76,11 +87,16 @@ export default function DashboardPage() {
           recentSubmissions: submissionsRes.submissions,
           upcomingAssignments: assignmentsRes.assignments
         })
-      } else {
+      } else if (user?.role === 'INSTRUCTOR') {
         // Fetch instructor data
-        const [myAssignmentsRes] = await Promise.all([
-          assignmentsAPI.getMyAssignments({ limit: 5 })
-        ])
+        console.log('Fetching instructor data...')
+        const [myAssignmentsRes] = await Promise.race([
+          Promise.all([
+            assignmentsAPI.getMyAssignments({ limit: 5 })
+          ]),
+          timeoutPromise
+        ]) as [any]
+        console.log('Instructor data received:', myAssignmentsRes)
 
         const totalSubmissions = myAssignmentsRes.assignments.reduce(
           (sum, assignment) => sum + (assignment._count?.submissions || 0), 
@@ -95,9 +111,20 @@ export default function DashboardPage() {
           recentSubmissions: [],
           upcomingAssignments: myAssignmentsRes.assignments
         })
+      } else {
+        console.warn('Unknown user role:', user?.role)
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
+      // Set default stats on error to prevent infinite loading
+      setStats({
+        totalAssignments: 0,
+        completedSubmissions: 0,
+        pendingSubmissions: 0,
+        averageScore: 0,
+        recentSubmissions: [],
+        upcomingAssignments: []
+      })
     } finally {
       setIsLoading(false)
     }

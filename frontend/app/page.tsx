@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useAuth } from '../context/AuthContext'
+import { useAuth } from '@/context/AuthContext'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Layout from '../components/Layout'
+import Layout from '@/components/Layout'
 import { 
   BookOpen, 
   Users, 
